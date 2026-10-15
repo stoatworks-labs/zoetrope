@@ -513,6 +513,15 @@ int runSmear( const Perturb& perturb )
 			            "(%.4f%%), tolerance %.4f px from %d taps' staircase (ripple %.2e); %zu pixels",
 			            raster.w, raster.h, c.name, omega, tau * 1e3, g.ring, measured, expectPx, 100.0 * ( measured / expectPx - 1.0 ),
 			            tolerance, n, ripple, ramp.size() ) );
+			//And where: the ramp's middle (x = 1/2) on the station's centre at
+			//the flash's middle, as the disc's own angle has it. The fit's
+			//value there is off by at most the ripple, so its place by the
+			//ripple over the slope, and the angle reached the GPU in float.
+			const double middle      = mp + ( 0.5 - mx ) / slope;
+			const double placeLimit  = ripple / slope + 2.0 * kAngleUlp;
+			Check( std::fabs( middle ) <= placeLimit,
+			       fmt( "%dx%d, %s: the ramp's middle %.4f px from the station's centre at the flash's middle (tolerance %.4f px)", raster.w,
+			            raster.h, c.name, middle * g.ring, placeLimit * g.ring ) );
 		}
 	return Verdict();
 }
