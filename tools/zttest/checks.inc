@@ -34,6 +34,8 @@ void hook( Rig& rig, const Perturb& perturb )
 	rig.plugin.SetResizeForgetsForTest( perturb.resizeForgets );
 }
 
+#include "physics.inc"
+
 //===========================================================================
 // --names (no GL)
 //===========================================================================
@@ -269,7 +271,18 @@ struct CheckEntry
 const std::vector< CheckEntry >& checks()
 {
 	static const std::vector< CheckEntry > list = {
+		{ "drift", runDrift, false },
+		{ "lock", runLock, false },
+		{ "smear", runSmear, false },
+		{ "energy", runEnergy, false },
+		{ "delay", runDelay, false },
+		{ "hand", runHand, false },
+		{ "alias", runAlias, false },
+		{ "audio", runAudio, false },
+		{ "resize", runResize, false },
 		{ "state", runState, false },
+		{ "bearing", runBearing, true },
+		{ "beat", runBeat, true },
 		{ "cues", runCues, true },
 		{ "names", runNames, true },
 	};
@@ -302,6 +315,19 @@ int runNegative( bool offlineOnly = false )
 		set( p );
 		cases.push_back( { name, fn, p, what } );
 	};
+	add( "drift", runDrift, "the expectation without the wrap: omega T itself", []( Perturb& p ) { p.unwrapped = true; } );
+	add( "drift", runDrift, "Sync's speed worked out for N + 1 stations", []( Perturb& p ) { p.discHooks = kHookStationMiscount; } );
+	add( "lock", runLock, "Sync's speed worked out for N + 1 stations", []( Perturb& p ) { p.discHooks = kHookStationMiscount; } );
+	add( "smear", runSmear, "a flash's light spread over half its overlap", []( Perturb& p ) { p.strobeHooks = kHookSmearHalved; } );
+	add( "energy", runEnergy, "a flash's light proportional to its length", []( Perturb& p ) { p.strobeHooks = kHookLightPerFlashTau; } );
+	add( "energy", runEnergy, "a segment's taps averaged over n + 1", []( Perturb& p ) { p.hooks = shaders::kHookTapWeights; } );
+	add( "delay", runDelay, "the print head a station further round than Print At", []( Perturb& p ) { p.discHooks = kHookHeadOneOn; } );
+	add( "bearing", runBearing, "the bearing without its dry friction", []( Perturb& p ) { p.discHooks = kHookNoCoulomb; } );
+	add( "hand", runHand, "the bearing without its dry friction", []( Perturb& p ) { p.discHooks = kHookNoCoulomb; } );
+	add( "beat", runBeat, "a beat fires at the start of its frame", []( Perturb& p ) { p.strobeHooks = kHookBeatAtFrameStart; } );
+	add( "alias", runAlias, "the window the whole frame, whatever the Shutter", []( Perturb& p ) { p.strobeHooks = kHookShutterIgnored; } );
+	add( "audio", runAudio, "the onset detector's first frame measured against zeroes (deaf for the first kick)", []( Perturb& p ) { p.unprimed = true; } );
+	add( "resize", runResize, "a new raster blanks the cards", []( Perturb& p ) { p.resizeForgets = true; } );
 	add( "cues", runCues, "ramp every control between keys", []( Perturb& p ) { p.cuesRamp = true; } );
 
 	if( offlineOnly )

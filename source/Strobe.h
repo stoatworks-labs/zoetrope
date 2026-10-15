@@ -75,7 +75,7 @@ enum StrobeHook : int
 	kHookBeatAtFrameStart = 1 << 0,///< a beat fires at the start of its frame, not where it fell
 	kHookLightPerFlashTau = 1 << 1,///< a flash's light proportional to its length (no 1 / Flash)
 	kHookShutterIgnored   = 1 << 2,///< the window is the whole frame whatever the Shutter
-	kHookSmearDoubled     = 1 << 3 ///< a flash's light spread over twice its overlap
+	kHookSmearHalved      = 1 << 3 ///< a flash's light spread over half its overlap: half the smear
 };
 
 class Strobe

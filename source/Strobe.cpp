@@ -160,8 +160,8 @@ std::vector< LightSegment > Strobe::Exposure( double now, double shutter, double
 		if( ( hooks & kHookLightPerFlashTau ) != 0 )
 			weight = strobe * ( b - a ) / 1e-3;
 		double to = b - now;
-		if( ( hooks & kHookSmearDoubled ) != 0 )
-			to = std::min( 0.0, ( a - now ) + 2.0 * ( b - a ) );
+		if( ( hooks & kHookSmearHalved ) != 0 )
+			to = ( a - now ) + 0.5 * ( b - a );
 		out.push_back( { a - now, to, weight, true } );
 	}
 	return out;
