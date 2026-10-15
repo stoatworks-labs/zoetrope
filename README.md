@@ -27,6 +27,35 @@ flash, smeared a little by its length, with the room light's blur of the disc's 
 the same exposure behind them.</sub>
 
 <!-- downloads:start -->
+
+## Download
+
+**[v0.1.0](https://github.com/stoatworks-labs/zoetrope/releases/tag/v0.1.0)** — prebuilt for macOS and Windows. Pick your platform:
+
+<details>
+<summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`zoetrope-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/zoetrope/releases/download/v0.1.0/zoetrope-0.1.0-macos-universal.dmg) | 249 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`zoetrope-macos-universal.zip`](https://github.com/stoatworks-labs/zoetrope/releases/latest/download/zoetrope-macos-universal.zip) | 207 KB |
+
+</details>
+
+<details>
+<summary><b>Windows</b> — x64</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| x64 · .exe installer | [`zoetrope-0.1.0-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/zoetrope/releases/download/v0.1.0/zoetrope-0.1.0-windows-x86_64-setup.exe) | 233 KB |
+| x64 · .zip archive | [`zoetrope-windows-x86_64.zip`](https://github.com/stoatworks-labs/zoetrope/releases/latest/download/zoetrope-windows-x86_64.zip) | 127 KB |
+
+</details>
+
+All builds, checksums and release notes: [github.com/stoatworks-labs/zoetrope/releases](https://github.com/stoatworks-labs/zoetrope/releases).
+
+macOS builds are signed and notarised and open normally. The Windows builds are unsigned, so SmartScreen warns once.
+
 <!-- downloads:end -->
 
 ## The one idea
@@ -72,6 +101,14 @@ None of this is drawn. Each is the disc and the light doing what they do.
 - **Printing.** You can watch it happen: a card changes as it passes the head. A fresh disc
   (or a change of Stations, which is a new disc) starts blank, white card stock, and fills
   in as it turns.
+
+[![Zoetrope — your clip on a spinning disc, strobed on the beat, for Resolume](docs/video-thumb.png)](https://www.youtube.com/watch?v=1PS0Qz8vy00)
+
+*[Watch it](https://www.youtube.com/watch?v=1PS0Qz8vy00) — 60 seconds, and it flashes: a fresh disc
+printed a card a beat and then locked, the figures crawling forwards and back, a hand-spun disc
+pushed on the beat and coasting to a stop, a long flash's smear, the room light's blur, a 61 Hz
+strobe blinking against a 60 fps shutter, and the drum through its slits, with and without the
+eye's persistence. Rendered by `zttest` over Resolume's demo clips, not captured from Resolume.*
 
 ## The drum
 
