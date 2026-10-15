@@ -535,12 +535,14 @@ in.
 ## About
 
 The last group, **About**, has the plugin's name, version, licence and maker, and buttons that open
-the project page, the source on GitHub and the support page in your browser.
+the project page, this user guide, the source on GitHub and the support page in your browser.
 
 ## Links
 
 - Project page: [stoatworks-labs.com/software/zoetrope](https://stoatworks-labs.com/software/zoetrope/)
 - Source: [github.com/stoatworks-labs/zoetrope](https://github.com/stoatworks-labs/zoetrope)
+- User guide: [stoatworks-labs.com/software/zoetrope/guide](https://stoatworks-labs.com/software/zoetrope/guide/)
+- Browser demo: [zoetrope-demo.stoatworks-labs.com](https://zoetrope-demo.stoatworks-labs.com/)
 
 ## Reporting something
 

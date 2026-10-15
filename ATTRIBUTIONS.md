@@ -3,9 +3,8 @@
 Zoetrope is built on other people's work. This file lists what that work is, who did
 it, and what it is doing here.
 
-It is a provisional hand copy, in the shape `stoatworks-backend`'s
-`scripts/sync-attributions.py` generates, written before the project was registered.
-Once it is, the master lists live in the backend and this file is generated from them.
+It is generated — the master lists live in the `stoatworks-backend` repo and are
+pushed out by `scripts/sync-attributions.py`. Edit it there, not here.
 
 ## Code we derived from other people's work
 
@@ -45,7 +44,7 @@ Libraries, SDKs and frameworks the project is built on or bundles.
 Licence: BSD-3-Clause  
 Copyright: FreeFrame
 
-Vendored as a git submodule at external/ffgl, pinned at b1afaf9.
+Vendored as a git submodule at external/ffgl (third_party/ffgl in oxbow).
 
 The plugin ABI itself. An FFGL effect or source is defined by this SDK's headers — there is no other way to be loadable by Resolume Arena and Avenue.
 
@@ -75,11 +74,11 @@ No code was taken from these — but they were how we knew we had it right, and 
 
 ### The classical Runge–Kutta method — Carl Runge and Martin Kutta
 
-tools/zttest/physics.inc's Rk4Disc: an independent fourth-order solution of the bearing's equation, d omega / dt = -k omega - c, that `zttest --bearing` and `--hand` hold the hand-spun disc's closed form to (3e-11 rad over ten seconds and six pushes).
+tools/zttest/physics.inc's Rk4Disc: an independent fourth-order solution of the bearing's equation, d omega / dt = -k omega - c, that zttest --bearing and --hand hold the hand-spun disc's closed form to (3e-11 rad over ten seconds and six pushes).
 
 ### Stroboscopic aliasing (the wagon-wheel effect)
 
-`zttest --drift`: a disc turning omega T per flash appears to turn omega T modulo a station, wrapped to plus or minus half of one. Worked from the sampling, not from anyone's code.
+zttest --drift: a disc turning omega T per flash appears to turn omega T modulo a station, wrapped to plus or minus half of one. Worked from the sampling, not from anyone's code.
 
 ## Inspirations
 
