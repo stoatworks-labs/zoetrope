@@ -1405,3 +1405,129 @@ int runDrum( const Perturb& perturb )
 	}
 	return Verdict();
 }
+
+//===========================================================================
+// --alpha: the output's alpha, on a clip with alpha (Resolume's demo clips
+// are DXV with alpha): the disc is opaque; Black is an opaque black; Clip
+// keeps the clip's alpha round the disc; Mix 0 is the clip.
+//===========================================================================
+int runAlpha( const Perturb& perturb )
+{
+	std::printf( "\n=== alpha: the disc is opaque, a black background is opaque, the clip behind keeps its alpha, Mix 0 is the clip\n" );
+	//Premultiplied, as Resolume's clips are: rgb is the picture over black.
+	auto halfClear = []( int, int width, int height, Floats& out ) {
+		out.assign( static_cast< size_t >( width ) * height * 4, 0.25f );
+		for( size_t i = 3; i < out.size(); i += 4 )
+			out[ i ] = 0.5f;
+	};
+	for( const Raster& raster : kRasters )
+	{
+		struct Case
+		{
+			const char* name;
+			Background background;
+			float mix;
+			View view;
+		};
+		const Case cases[] = { { "disc on Black", Background::Black, 1.0f, View::Disc },
+			                   { "disc on Clip", Background::Clip, 1.0f, View::Disc },
+			                   { "disc at Mix 0", Background::Clip, 0.0f, View::Disc },
+			                   { "drum on Clip", Background::Clip, 1.0f, View::Drum } };
+		for( const Case& c : cases )
+		{
+			Rig rig;
+			if( !startRig( rig, raster, halfClear, perturb ) || !printAll( rig, 8 ) )
+				return 1;
+			rig.Set( PT_BACKGROUND, static_cast< float >( c.background ) );
+			rig.Set( PT_MIX, c.mix );
+			rig.Set( PT_VIEW, static_cast< float >( c.view ) );
+			if( !rig.Render( 2 ) )
+				return 1;
+			const Floats out = rig.Output();
+			const Geometry& g = rig.plugin.LastGeometry();
+			//The middle of the frame is on the disc (or the drum's wall);
+			//the corner is behind it.
+			const float centre = out[ ( static_cast< size_t >( rig.height / 2 ) * rig.width + rig.width / 2 ) * 4 + 3 ];
+			const float corner = out[ 3 ];
+			const float wantCentre = c.mix == 0.0f ? 0.5f : 1.0f;
+			const float wantCorner = c.mix == 0.0f || c.background == Background::Clip ? 0.5f : 1.0f;
+			Check( centre == wantCentre && corner == wantCorner,
+			       fmt( "%dx%d, %s: alpha %.3f on the %s (want %.1f), %.3f in the corner (want %.1f)", raster.w, raster.h, c.name, centre,
+			            c.view == View::Drum ? "drum" : "disc", wantCentre, corner, wantCorner ) );
+			(void)g;
+		}
+	}
+	return Verdict();
+}
+
+//===========================================================================
+// --afterimage: Persistence is an exponential of the camera's pictures: one
+// flash fades by exp( -T / tau ) a frame, and the eye sees all its light.
+//===========================================================================
+int runAfterimage( const Perturb& perturb )
+{
+	std::printf( "\n=== afterimage: one flash fades by exp( -T / tau ) a frame, and the afterimage holds all of its light\n" );
+	for( const Raster& raster : kRasters )
+	{
+		Rig rig;
+		if( !startRig( rig, raster, flatClip( 1.0f ), perturb ) || !printAll( rig, 8 ) || !rig.Render( 1 ) )
+			return 1;
+		const float param  = ParamFromPersistence( 0.1 );
+		const double tau   = PersistenceFromParam( param );
+		const double keep  = std::exp( -1.0 / ( rig.fps * tau ) );
+		rig.Set( PT_PERSISTENCE, param );
+		if( !rig.Render( 3 ) )
+			return 1;
+		const Geometry g   = rig.plugin.LastGeometry();
+		const double angle = rig.plugin.DiscState().Angle();
+		std::vector< size_t > inside;
+		for( int j = 0; j < rig.height; ++j )
+			for( int i = 0; i < rig.width; ++i )
+			{
+				const double x = i + 0.5 - g.centreX, y = j + 0.5 - g.centreY;
+				const double r = std::hypot( x, y );
+				const double phi = wrapTo( clockwise( x, y ) - angle, g.pitch );
+				if( std::fabs( r * std::sin( phi ) ) < 0.5 * g.printHalfWidth && std::fabs( r * std::cos( phi ) - g.ring ) < 0.5 * g.printHalfHeight )
+					inside.push_back( static_cast< size_t >( j ) * rig.width + i );
+			}
+		auto mean = [ & ]() {
+			const Picture p = pictureOf( rig );
+			double sum      = 0.0;
+			for( size_t index : inside )
+				sum += p.light[ index ];
+			return sum / std::max< size_t >( inside.size(), 1 );
+		};
+		std::vector< double > seen;
+		if( !rig.Fire() )
+			return 1;
+		seen.push_back( mean() );
+		for( int f = 0; f < 90; ++f )
+		{
+			if( !rig.Render( 1 ) )
+				return 1;
+			seen.push_back( mean() );
+		}
+		//Frame by frame, the ratio: exp( -T / tau ), the afterimage kept in
+		//half float, so each frame's value is good to one half-float ULP,
+		//2^-10 of it, and a ratio of two to twice that.
+		const double ulp = 1.0 / 1024.0;
+		double worst = 0.0, total = 0.0;
+		for( size_t k = 0; k < seen.size(); ++k )
+		{
+			total += seen[ k ];
+			if( k > 0 && seen[ k - 1 ] > 1e-3 )
+				worst = std::max( worst, std::fabs( seen[ k ] / seen[ k - 1 ] - keep ) );
+		}
+		//The light the eye saw over 1.5 s: 1 - keep^91 of the flash, the
+		//rest still to come. If every store rounds the same way (Apple's
+		//GPU truncates), keep is in effect keep ( 1 - ulp ), and the sum
+		//falls short by up to keep ulp / ( 1 - keep ).
+		const double expected = 1.0 - std::pow( keep, static_cast< double >( seen.size() ) );
+		const double sumLimit = keep * ulp / ( 1.0 - keep ) + 1e-4;
+		Check( worst < 2.0 * ulp && std::fabs( total - expected ) < sumLimit,
+		       fmt( "%dx%d, Persistence %.0f ms at 60 fps: each frame keeps %.5f of the last (worst departure %.1e, tolerance %.1e: a "
+		            "half-float afterimage); over %zu frames the eye saw %.5f of the flash, the exponential's %.5f (tolerance %.1e)",
+		            raster.w, raster.h, tau * 1e3, keep, worst, 2.0 * ulp, seen.size(), total, expected, sumLimit ) );
+	}
+	return Verdict();
+}

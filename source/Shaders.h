@@ -64,7 +64,9 @@ constexpr int kMaxTaps = 64;
 enum Hook : int
 {
 	kHookTapWeights = 1 << 0,///< a segment's taps averaged over n + 1, not n
-	kHookDrumStill  = 1 << 1 ///< the drum's far wall seen at the exposure's middle, not when each slit passed
+	kHookDrumStill  = 1 << 1,///< the drum's far wall seen at the exposure's middle, not when each slit passed
+	kHookClipAlpha  = 1 << 2,///< the clip's alpha passed through everywhere
+	kHookAfterglow  = 1 << 3 ///< the afterimage adds the last picture to this one instead of mixing them
 };
 
 } // namespace zoetrope::shaders

@@ -273,7 +273,7 @@ vec3 wallAt( float g, float y, float turned, float scale )
 	float cover = clamp( ( DrumCard.x - abs( t ) ) * scale + 0.5, 0.0, 1.0 ) * clamp( ( DrumCard.y - abs( y ) ) * scale + 0.5, 0.0, 1.0 );
 	if( cover <= 0.0 )
 		return vec3( kWall );
-	int card     = ( int( kf ) - StationOffset + 64 * Stations ) % Stations;
+	int card     = ( int( kf ) + 64 * Stations - StationOffset ) % Stations;
 	vec4 print_  = texture( Cards, vec3( 0.5 + 0.5 * t / DrumPrint.x, 0.5 + 0.5 * y / DrumPrint.y, float( card ) ) );
 	float inside = clamp( ( DrumPrint.x - abs( t ) ) * scale + 0.5, 0.0, 1.0 ) * clamp( ( DrumPrint.y - abs( y ) ) * scale + 0.5, 0.0, 1.0 ) * print_.a;
 	return mix( vec3( kWall ), mix( vec3( kStock ), print_.rgb, inside ), cover );
@@ -432,10 +432,14 @@ void main()
 		sceneA  = mix( sceneA, 1.0, c );
 	}
 
+	if( ( Hooks & 4 ) != 0 )
+		sceneA = original.a;
 	if( OutputMode == 1 )
 	{
 		vec4 before = texelFetch( Previous, pixel, 0 );
 		fragColor   = vec4( mix( scene, before.rgb, Afterimage ), mix( sceneA, before.a, Afterimage ) );
+		if( ( Hooks & 8 ) != 0 )
+			fragColor.rgb = scene + Afterimage * before.rgb;
 		return;
 	}
 	fragColor = mix( original, vec4( toCode( scene ), sceneA ), MixAmount );

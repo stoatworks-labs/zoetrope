@@ -26,7 +26,7 @@ crossings, or the phase instrument the checks read angles with.
 ## Verify
 - Everything: `tools/verify.sh` (about ten minutes: fresh universal build, every
   picture check at 1280x720 and 320x180, again on Apple's software renderer, the
-  negative controls, 12 mutants, the sweep, lipo, plist, ad-hoc signature,
+  negative controls, 13 mutants, the sweep, lipo, plist, ad-hoc signature,
   `oxbow probe` and `selftest`, the pipe, the bench)
 - **The disc**: `--drift` (the wrapped advance per flash), `--lock` (Slip 1 stands
   still for 100 flashes), `--delay` (frame numbers read off the cards),
@@ -36,9 +36,11 @@ crossings, or the phase instrument the checks read angles with.
   whatever its length; the room light's blur keeps the ring's light), `--alias`
   (what each frame's shutter catches), `--beat` (no GL: flashes on the beat and
   its subdivisions), `--audio`.
-- **The rest**: `--resize`, `--state`, `--cues`, `--names`.
-- The checks can fail: `--negative` (14 wrong models), `tools/mutate.sh` (12 mutants).
-- No dead controls: `python3 tools/sweep.py` (21 swept, all live; the 22nd,
+- **The drum**: `--drum` (the figures' centre lines against the ray geometry,
+  and the squeeze against (d + a) / 2d).
+- **The rest**: `--afterimage`, `--alpha`, `--resize`, `--state`, `--cues`, `--names`.
+- The checks can fail: `--negative` (17 wrong models), `tools/mutate.sh` (13 mutants).
+- No dead controls: `python3 tools/sweep.py` (22 swept, all live; the 23rd,
   Audio, is the input Threshold is swept through; `--bare` lists the five that
   need a context).
 - Render cost: `./build/zttest --bench`.
@@ -56,6 +58,10 @@ crossings, or the phase instrument the checks read angles with.
   that frame of the clip; the crossing's moment is solved from the drive's closed
   form, not sampled. Prints live in a texture array, one layer per station, in
   linear light, and survive a resize.
+- **The drum** (View Drum) is a branch of the scene pass (`kDrumFragment`): a ray
+  per pixel meets the near and far walls, the slits passing the near point are
+  solved from the angle table and its inverse, the far wall averaged over each
+  slit's open turn. Steady light; the camera opened by the slits' duty cycle.
 - **No trig in the GLSL.** A pixel's angle is `clockAngle` (arctangent by
   reduction and series), a card's frame `sinSeries`/`cosSeries` of an angle under
   π/4; `verify.sh` greps.
@@ -76,8 +82,7 @@ crossings, or the phase instrument the checks read angles with.
   in `.github/` assume the public `stoatworks-labs/zoetrope` they are written for.
 
 ## Not done yet
-- Never loaded into Resolume. No host has played it any music.
-- Disc view only: the Drum (slits as the shutter) is not built. See AGENTS.md.
+- Never loaded into Resolume. No host has played it any music. Windows never compiled.
 - No browser demo, no OpenFX port, no user guide, no presets, no video.
 
 ## Diagnostics

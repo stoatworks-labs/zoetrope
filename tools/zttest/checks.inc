@@ -287,6 +287,8 @@ const std::vector< CheckEntry >& checks()
 		{ "audio", runAudio, false },
 		{ "resize", runResize, false },
 		{ "drum", runDrum, false },
+		{ "alpha", runAlpha, false },
+		{ "afterimage", runAfterimage, false },
 		{ "state", runState, false },
 		{ "bearing", runBearing, true },
 		{ "beat", runBeat, true },
@@ -336,6 +338,8 @@ int runNegative( bool offlineOnly = false )
 	add( "audio", runAudio, "the onset detector's first frame measured against zeroes (deaf for the first kick)", []( Perturb& p ) { p.unprimed = true; } );
 	add( "resize", runResize, "a new raster blanks the cards", []( Perturb& p ) { p.resizeForgets = true; } );
 	add( "drum", runDrum, "the far wall seen at the exposure's middle, not when each slit passed", []( Perturb& p ) { p.hooks = shaders::kHookDrumStill; } );
+	add( "alpha", runAlpha, "the clip's alpha passed through everywhere", []( Perturb& p ) { p.hooks = shaders::kHookClipAlpha; } );
+	add( "afterimage", runAfterimage, "the afterimage adds the last picture instead of mixing", []( Perturb& p ) { p.hooks = shaders::kHookAfterglow; } );
 	add( "cues", runCues, "ramp every control between keys", []( Perturb& p ) { p.cuesRamp = true; } );
 
 	if( offlineOnly )
