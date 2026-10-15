@@ -523,7 +523,12 @@ in.
   which is close (about 1e-5 rad) but not the closed form.
 - **Cards face outwards.** There's no carousel mode to keep the figures upright.
 - **Every flash is the same.** A soft hit and a hard one give the same light; there's no Accent.
-- **No presets**, no browser demo and no OpenFX version.
+- **No presets** and no OpenFX version.
+- **There is a browser demo** at [zoetrope-demo.stoatworks-labs.com](https://zoetrope-demo.stoatworks-labs.com/).
+  It runs the plugin itself, compiled to WebAssembly and drawing with its own shaders in WebGL2,
+  not a port of it. The page is the host: its tempo is a BPM clock it keeps itself, there's no
+  audio (so Onset never fires), its clock is the browser's, and four GL calls are translated for
+  WebGL2. The page lists everything it doesn't reproduce.
 
 ---
 

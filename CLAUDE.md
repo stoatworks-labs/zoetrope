@@ -81,9 +81,26 @@ crossings, or the phase instrument the checks read angles with.
 - Local only: no GitHub repository, no tag, no website entry yet. The workflows
   in `.github/` assume the public `stoatworks-labs/zoetrope` they are written for.
 
+## Browser demo
+- `demo/` is https://zoetrope-demo.stoatworks-labs.com (Cloudflare Worker
+  `zoetrope-demo`, a ROUTE in `wrangler.toml`, which needs a proxied AAAA 100:: record
+  made through the API before the first deploy -- the zone's custom domains are full,
+  and without the record the page is dark with a green deploy). By hand:
+  `cf-run npx wrangler deploy`.
+- It runs the plugin's C++ as WebAssembly, COMMITTED (`demo/zoetrope-core.{js,wasm}`):
+  after changing anything in `source/`, rerun `demo/tools/build-wasm.sh` (needs
+  emscripten, `em++`); verify.sh fails until you do (`demo/wasm/inputs.sha256`).
+- `demo/shaders.js` is GENERATED, pieces and `ASSEMBLY` order both: after changing
+  `source/Shaders.cpp` run `python3 demo/tools/check_shaders.py --write`.
+- `demo/wasm/glue.cpp` is the host (it sends SetBeatInfo from the page's BPM clock and
+  never writes Audio); `demo/wasm/gl_shim.cpp` is what WebGL2 needs translated (see
+  AGENTS.md). `demo/vendor/` is the shared kit: never edit it, re-vendor with
+  `STOATWORKS_ROOTS=~/dev stoatworks-backend/resolume-demo/sync.sh zoetrope` (this
+  repo is not on sync.sh's list yet).
+
 ## Not done yet
 - Never loaded into Resolume. No host has played it any music. Windows never compiled.
-- No browser demo, no OpenFX port, no user guide, no presets, no video.
+- No OpenFX port, no user guide, no presets, no video.
 
 ## Diagnostics
 

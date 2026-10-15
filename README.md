@@ -155,7 +155,7 @@ passes the head, so a print is up to a frame later than the moment it stands for
 drum's hand-spun disc is inverted on a 16-piece table across the exposure, which is close
 but not the closed form. AGENTS.md lists every approximation.
 
-No user guide, no browser demo, no OpenFX port, no presets.
+No user guide, no OpenFX port, no presets. The browser demo is below.
 
 ## Build
 
@@ -199,6 +199,21 @@ Render a frame of your own:
 ```bash
 ./build/zttest --out /tmp/zoetrope.png --frames 152 --set "Slip=0.49" --set "Trigger=Eighth Beat"
 ```
+
+## Browser demo
+
+**<https://zoetrope-demo.stoatworks-labs.com/>** runs the plugin itself, not a port of it:
+`source/Zoetrope.cpp` and everything it calls (the disc, the strobe, the cards, the
+parameter table), with the FFGL SDK classes it uses, compiled unmodified to WebAssembly by
+`demo/tools/build-wasm.sh` (emscripten) and drawing with its own GLSL in WebGL2. The panel
+is read back from the plugin's own declarations. The page is the host, and a thin one: its
+tempo is a BPM clock it keeps itself (a Host BPM field, 120 to start with), handed to the
+plugin as Resolume hands over its transport; there's no audio, so Trigger Onset never fires
+and Fire is a button; the clock is the browser's; the clip is generated in the page; and
+four GL entry points are translated for WebGL2 (`demo/wasm/gl_shim.cpp`). I haven't
+compared it with `zttest` pixel for pixel. `tools/verify.sh` fails if `demo/shaders.js` or
+any input of the `.wasm` has drifted from `source/`. It's a demo, not the plugin; the page
+lists everything it doesn't reproduce.
 
 ## License
 

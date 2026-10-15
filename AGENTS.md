@@ -325,13 +325,72 @@ the print head isn't drawn; the sweep reads the drum through View alone.
       zttest/physics.inc every physics check and its instruments (the phase, the twin, the card reader)
       verify.sh, mutate.sh, sweep.py, glslc.sh
 
+## The browser demo (2026-10-15)
+
+`demo/` is <https://zoetrope-demo.stoatworks-labs.com>, built to the fleet's
+`resolume-demo` kit rules, fiche's and polyhedral's way: it **runs the plugin rather than
+a port of it**. Built and tested locally on 2026-10-15, before the repository was public;
+the DNS record, the deploy and a deploy workflow were left to the release.
+
+- **`zoetrope-core.wasm` is the plugin's C++, unmodified**: Zoetrope.cpp, Disc, Strobe,
+  Cards, Audio, Controls, Shaders, PassBuffer and Diag, with the SDK's
+  CFFGLPluginManager / CFFGLPlugin, FFGLLog, FFGLShader, FFGLScreenQuad, FFGLFBO and the
+  scoped bindings. Left out: PluginEntry.cpp (the registration and build stamp), so also
+  FFGL.cpp (plugMain) and CFFGLPluginInfo. `-D__linux__` goes only to the files that
+  include the SDK (Zoetrope, Cards, PassBuffer, the SDK's own, glue.cpp). Committed, with
+  `demo/wasm/inputs.sha256` pinning every input; rebuild with `demo/tools/build-wasm.sh`.
+- **The host** (`demo/wasm/glue.cpp`) constructs the plugin, reads its 27 declarations
+  back through the SDK's host getters (the panel, Audio and the About block included, is
+  built from them) and forwards SetFloatParameter, then each frame SetTime, SetBeatInfo
+  and ProcessOpenGL in zttest's Rig order (the About line, the only text parameter, is
+  display only and never sent). `ZOETROPE_LOG_DIR` must
+  be set before the first InitGL: Diag opens its log there.
+- **The transport is simulated, and is a bar phase, not only a BPM.** The page keeps a BPM
+  clock (the Host BPM field, 120 at first; `?bpm=` too) and hands SetBeatInfo that BPM
+  and a bar phase accumulated from the page's seconds, as the Rig does. So the plugin
+  takes its host-beat path (`hostBeatSeen`), the one Resolume drives, rather than
+  Strobe.cpp's own-clock fallback (which would also work, as honeydew's page does with a
+  NaN phase). Accumulated, so a BPM change never jumps the phase; Restart zeroes it.
+- **No audio.** Audio (FF_TYPE_BUFFER, FF_USAGE_FFT, 64 bins) is shown read-only where it
+  is declared and never written, so the analyser hears silence: Trigger Onset never fires
+  and Threshold does nothing on the page. Fire is a button that holds the press one frame,
+  as Resolume sends an event. A press while paused lights the next Step, not the paused
+  frame: an unannounced flash is placed to end on its frame, whose window has closed.
+- **The shim** (`demo/wasm/gl_shim.cpp`), four entry points, polyhedral's: glShaderSource
+  (the text must equal one of the page's assemblies of `shaders.js`, then the kit's
+  `port()`) and glEnable / glDisable / glIsEnabled (GL_PROGRAM_POINT_SIZE, GLState.h, is
+  not in WebGL2). Nothing else needed translating: the cards are a single-level RGBA16F
+  array and FFGLFBO's RGBA16F with GL_FLOAT is legal in ES 3.0, so unlike fiche there is
+  no texture-storage shim. Rendering into RGBA16F needs EXT_color_buffer_float (or
+  _half_float); the page stops without.
+- **Checked**: `demo/tools/check_shaders.py` (verify.sh) holds the 8 pieces, kVersion and
+  Assemble()'s order for all 5 stages to the C++, and every input of the .wasm to its
+  manifest. Negative controls, all caught: a comment added to Disc.cpp; one character of
+  the GLSL (kDisc) in Shaders.cpp; a new header in source/; shaders.js edited by hand.
+- **Headless, 2026-10-15** (M4 Max, Chrome 155 headless, ANGLE on Metal and on
+  SwiftShader, cdpshot's CDP plumbing): every stage the plugin compiled matched the page's
+  assembly; a paused frame redrawn is identical; Room Light 0.08 -> 0.6 by its slider
+  changed 171k of 550k canvas pixels, View Drum 250k; Fire Only stays black until Fire,
+  then one flash fires and lights the ring on the next Step; Host BPM 150 turns the disc
+  at 12.5 RPM (Sync: a card per beat). No console errors or warnings on Metal. On
+  SwiftShader Chrome logs four "GPU stall due to ReadPixels" performance warnings, which
+  fiche's shipped page logs too: Chrome reading the WebGL canvas back to composite in
+  software.
+- **Not compared with zttest**, unlike fiche's page. The pre-vote wall clock and the
+  synthetic beat would both have to be matched frame for frame first.
+- **The clip** is the kit's generated ones (nothing to licence); Lights on black is the
+  default because moving lights make the delay line round the ring visible.
+- **Left to the release**: the DNS record, the deploy, `deploy.yml` (Actions only on a
+  public repo), adding `zoetrope` to `resolume-demo/sync.sh`'s list, and the website's
+  `demo` field.
+
 ## Not done
 
 - **Never loaded into Resolume**, on macOS or on Windows. `oxbow` loads it, probes it and
   renders 120 frames through `plugMain`; nothing else has.
 - **Windows never compiled.** CI would be the first place; it has no remote to run on.
-- No user guide, browser demo, OpenFX port, presets or video. No GitHub repository, tag or
-  website entry: the release brief does those.
+- No user guide, OpenFX port, presets or video. No GitHub repository, tag or website
+  entry: the release brief does those. The browser demo is above.
 
 ## Open design questions
 
