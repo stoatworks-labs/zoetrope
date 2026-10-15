@@ -81,7 +81,8 @@ Here the eye is three radii out, so two thirds.
 ![The inside of a dark drum seen through a band of slits: a row of squeezed kaleidoscope frames, the ones to the left brighter and older than the ones to the right](docs/drum.png)
 
 <sub>The drum on `IntoTheGlow_02`, rendered by `zttest`: Sync on every eighth of a beat at
-120 BPM and 120 ms of Persistence. Without Persistence the camera sees what a 60 fps
+120 BPM, 120 ms of Persistence, and Radius turned up to about 0.95 so the drum is wider than
+the frame. Without Persistence the camera sees what a 60 fps
 camera really sees of a zoetrope, which is the slits sweeping across the figures a few
 at a time. With the eye's afterimage it reads as it does in the room.</sub>
 
@@ -155,7 +156,7 @@ passes the head, so a print is up to a frame later than the moment it stands for
 drum's hand-spun disc is inverted on a 16-piece table across the exposure, which is close
 but not the closed form. AGENTS.md lists every approximation.
 
-No user guide, no OpenFX port, no presets. The browser demo is below.
+There's a [user guide](docs/USER-GUIDE.md). No OpenFX port and no presets. The browser demo is below.
 
 ## Build
 

@@ -100,7 +100,7 @@ crossings, or the phase instrument the checks read angles with.
 
 ## Not done yet
 - Never loaded into Resolume. No host has played it any music. Windows never compiled.
-- No OpenFX port, no user guide, no presets, no video.
+- No OpenFX port, no presets. The user guide is `docs/USER-GUIDE.md`.
 
 ## Diagnostics
 

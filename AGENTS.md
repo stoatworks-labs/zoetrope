@@ -389,8 +389,8 @@ the DNS record, the deploy and a deploy workflow were left to the release.
 - **Never loaded into Resolume**, on macOS or on Windows. `oxbow` loads it, probes it and
   renders 120 frames through `plugMain`; nothing else has.
 - **Windows never compiled.** CI would be the first place; it has no remote to run on.
-- No user guide, OpenFX port, presets or video. No GitHub repository, tag or website
-  entry: the release brief does those. The browser demo is above.
+- No OpenFX port or presets. The user guide is `docs/USER-GUIDE.md`; the video is made in
+  stoatworks-backend's `video/projects/zoetrope/`. The browser demo is above.
 
 ## Open design questions
 
