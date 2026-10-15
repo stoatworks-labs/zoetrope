@@ -99,7 +99,7 @@ crossings, or the phase instrument the checks read angles with.
   repo is not on sync.sh's list yet).
 
 ## Not done yet
-- Never loaded into Resolume. No host has played it any music. Windows never compiled.
+- Never loaded into Resolume on macOS. No host has played it any music. Windows: gated in Arena 7.27.1, 9 of 9 twice.
 - No OpenFX port, no presets. The user guide is `docs/USER-GUIDE.md`.
 
 ## Diagnostics

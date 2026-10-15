@@ -23,9 +23,11 @@ it, 20% room light and a 3 ms flash. The cards stand still in the flash, smeared
 length, with the room light's blur of the disc's turn over the same exposure behind them. Going
 clockwise from the print head, each card is a sixteenth of a second older than the last.*
 
-> **Before you rely on this:** it's at **v0.1.0**, the first release, and very early days. It has
-> **never been loaded into Resolume**, on macOS or on Windows, and the Windows build has never
-> been compiled. What's here was compiled, rendered and measured offline on an Apple Silicon Mac
+> **Before you rely on this:** it's at **v0.1.0**, the first release, and very early days. On
+> macOS it has **never been loaded into Resolume**. In Resolume Arena 7.27.1 on Windows (software
+> rendering, no GPU, no sound) it loads, registers and renders, and passed all 9 of the fleet's
+> Arena checks twice; 18 and then 19 controls measurably changed the picture there, with Push and
+> Print At too close to call (they act on a moving disc and a small marker). What's here was compiled, rendered and measured offline on an Apple Silicon Mac
 > (macOS 26), by a harness that drives the plugin's own class in a headless GL context, at two
 > rasters (1280×720 and 320×180) and again on Apple's software renderer. A disc locked to the beat
 > stands still to a ten-thousandth of a pixel over a hundred flashes. A crawl advances by the

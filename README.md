@@ -10,8 +10,9 @@
 > hand-spun disc follows an independent RK4 solution of its bearing to a ten-millionth of a
 > radian and stops when the closed form says; and in the drum the figures stand where the
 > geometry puts them, squeezed by (d + a) / 2d. 17 negative controls and 13 one-character
-> mutants prove the checks can fail. It's **never been loaded into Resolume**, on any
-> machine. The full rundown is under [Status](#status).
+> mutants prove the checks can fail. In Resolume Arena on Windows it loads, registers and
+> renders, and passed all 9 of the fleet's Arena checks, twice; on macOS it's **never been
+> loaded into Resolume**. The full rundown is under [Status](#status).
 
 The clip's frames printed on the cards of a spinning disc, seen only in the light of a
 strobe that fires on the music. An FFGL effect for [Resolume](https://resolume.com) Arena
@@ -24,6 +25,9 @@ Resolume's bundled `IntoTheGlow_02`, a flash on every eighth of a beat at 120 BP
 the disc locked to it, 20% room light and a 3 ms flash: the cards stand still in the
 flash, smeared a little by its length, with the room light's blur of the disc's turn over
 the same exposure behind them.</sub>
+
+<!-- downloads:start -->
+<!-- downloads:end -->
 
 ## The one idea
 
@@ -105,7 +109,7 @@ later than the one before it round the ring, which at 120 BPM is half a second a
 
 ## Status
 
-**Unreleased, 15 October 2026: built, measured offline, never run in a host.**
+**v0.1.0, 15 October 2026: measured offline on macOS, and gated in Resolume Arena on Windows.**
 
 ### Measured offline, on macOS
 
@@ -143,13 +147,17 @@ room light, with Persistence: **1.9**, **3.6** and **8.9 ms**, which at 4K is ov
 60 fps frame. The drum at 600 RPM with Persistence: **1.2**, **1.2** and **3.8 ms**. macOS
 figures only.
 
+### In Resolume Arena, on Windows
+
+In **Resolume Arena 7.27.1 on Windows** (win-lab: Mesa llvmpipe, software rendering, no GPU, no sound device) the x64 build loads, registers as `SW Zoetrope` (`ZT01`, an effect) and renders, and passed all 9 of the fleet's Arena checks that can run there, twice. All 29 controls (Arena's Opacity and the plugin's 28) match their declarations and Arena's log stays clean. Held under a locked 157 Hz strobe with Persistence, so the cards stand still between the gate's grabs, 18 controls measurably changed the picture in the first run and 19 in the second. Push and Print At came back too close to call both times, and Friction once: Push and Friction only act on a hand-spun disc in motion, and Print At only moves the small print-head marker over a still clip. Audio and Threshold need sound, which that machine hasn't got. Software rendering says nothing about a GPU or about speed. The expectation is plugin-bench's `arena/expect/zoetrope.json`.
+
 ### Not established
 
-It's **never been loaded into Resolume**, on macOS or Windows. Everything above was
+On macOS it's **never been loaded into Resolume**: everything above the Windows section was
 compiled, rendered and measured offline against the plugin's own class in a headless CGL
-context, plus an `oxbow` load. I haven't seen how the 23 controls read in Arena's
-inspector, how Trigger follows Arena's transport, or what Resolume's FFT does to the onset
-detector. The Windows build has never been compiled.
+context, plus an `oxbow` load. I haven't seen how Trigger follows Arena's transport on
+real hardware, or what Resolume's FFT does to the onset detector: nobody has measured what
+Resolume's bins carry, so Threshold's scale is a guess.
 
 A card is printed with the frame of the clip the host hands over on the frame its centre
 passes the head, so a print is up to a frame later than the moment it stands for. The

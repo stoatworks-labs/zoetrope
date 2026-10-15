@@ -386,9 +386,11 @@ the DNS record, the deploy and a deploy workflow were left to the release.
 
 ## Not done
 
-- **Never loaded into Resolume**, on macOS or on Windows. `oxbow` loads it, probes it and
-  renders 120 frames through `plugMain`; nothing else has.
-- **Windows never compiled.** CI would be the first place; it has no remote to run on.
+- **Never loaded into Resolume on macOS.** `oxbow` loads it there. On Windows, Arena 7.27.1 on
+  win-lab passed it 9 of 9 twice (2026-10-15): 18 then 19 controls live, Push and Print At
+  inconclusive (a moving disc, a small marker), Friction once. The expectation holds the picture
+  controls under a locked 157 Hz strobe with Persistence; without that, the gate's grabs land
+  between beat flashes and the floor is noise.
 - No OpenFX port or presets. The user guide is `docs/USER-GUIDE.md`; the video is made in
   stoatworks-backend's `video/projects/zoetrope/`. The browser demo is above.
 
