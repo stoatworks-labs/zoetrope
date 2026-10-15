@@ -52,6 +52,9 @@ enum ParamId : unsigned int
 	PT_BACKGROUND,
 	PT_MIX,
 
+	// -- View: what is looked at -----------------------------------------------
+	PT_VIEW,
+
 	// -- The Stoatworks About block: a text line, then one button per link.
 	PT_ABOUT_FIRST,
 	PT_COUNT = PT_ABOUT_FIRST + 1 + stoatworks::about::kButtonCount
@@ -111,6 +114,13 @@ enum class Background
 {
 	Black = 0,
 	Clip,///< the clip, unlit, behind the disc
+	Count
+};
+
+enum class View
+{
+	Disc = 0,///< the cards on a disc, face on, under the strobe
+	Drum,    ///< the cards inside a drum, seen through slits in its near wall
 	Count
 };
 

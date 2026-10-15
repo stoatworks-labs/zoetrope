@@ -213,13 +213,19 @@ int runBench()
 	};
 	const Case cases[] = {
 		{ "defaults at 120 BPM", []( Rig& ) {} },
-		{ "a fast disc: Rate 150 Hz, 20 ms flashes, RPM 300", []( Rig& r ) {
+		{ "a fast disc: Rate 150 Hz, 20 ms flashes, 600 RPM", []( Rig& r ) {
 			 r.Set( PT_TRIGGER, static_cast< float >( Trigger::Rate ) );
 			 r.Set( PT_RATE, ParamFromRate( 150.0 ) );
 			 r.Set( PT_FLASH, ParamFromFlash( 20e-3 ) );
 			 r.Set( PT_SYNC, 0.0f );
 			 r.Set( PT_RPM, 1.0f );
 			 r.Set( PT_ROOM_LIGHT, 0.3f );
+			 r.Set( PT_PERSISTENCE, 0.5f );
+		 } },
+		{ "the drum at 600 RPM, Persistence 100 ms", []( Rig& r ) {
+			 r.Set( PT_VIEW, static_cast< float >( View::Drum ) );
+			 r.Set( PT_SYNC, 0.0f );
+			 r.Set( PT_RPM, 1.0f );
 			 r.Set( PT_PERSISTENCE, 0.5f );
 		 } },
 	};
@@ -280,6 +286,7 @@ const std::vector< CheckEntry >& checks()
 		{ "alias", runAlias, false },
 		{ "audio", runAudio, false },
 		{ "resize", runResize, false },
+		{ "drum", runDrum, false },
 		{ "state", runState, false },
 		{ "bearing", runBearing, true },
 		{ "beat", runBeat, true },
@@ -328,6 +335,7 @@ int runNegative( bool offlineOnly = false )
 	add( "alias", runAlias, "the window the whole frame, whatever the Shutter", []( Perturb& p ) { p.strobeHooks = kHookShutterIgnored; } );
 	add( "audio", runAudio, "the onset detector's first frame measured against zeroes (deaf for the first kick)", []( Perturb& p ) { p.unprimed = true; } );
 	add( "resize", runResize, "a new raster blanks the cards", []( Perturb& p ) { p.resizeForgets = true; } );
+	add( "drum", runDrum, "the far wall seen at the exposure's middle, not when each slit passed", []( Perturb& p ) { p.hooks = shaders::kHookDrumStill; } );
 	add( "cues", runCues, "ramp every control between keys", []( Perturb& p ) { p.cuesRamp = true; } );
 
 	if( offlineOnly )

@@ -71,6 +71,7 @@ SWEEP = {
     "Persistence": (["Persistence=0"], ["Persistence=1"], []),
     "Background": (["Background=0"], ["Background=1"], []),
     "Mix": (["Mix=0"], ["Mix=1"], []),
+    "View": (["View=0"], ["View=1"], []),
 }
 
 # The About block: a text line and browser buttons, with no pixel to sweep.

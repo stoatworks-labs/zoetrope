@@ -52,7 +52,7 @@ ASSEMBLED = {
 	"quad":  [ "kVersion", "kQuadVertex" ],
 	"print": [ "kVersion", "kCommon", "kPrintFragment" ],
 	"carry": [ "kVersion", "kCommon", "kCarryFragment" ],
-	"scene": [ "kVersion", "kCommon", "kSceneFragment" ],
+	"scene": [ "kVersion", "kCommon", "kSceneFragment", "kDrumFragment", "kSceneMain" ],
 	"show":  [ "kVersion", "kCommon", "kShowFragment" ],
 }
 

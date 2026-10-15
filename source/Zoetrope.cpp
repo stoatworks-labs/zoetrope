@@ -369,11 +369,41 @@ FFResult ZoetropePlugin::ProcessOpenGL( ProcessOpenGLStruct* pgl )
 	geometry.stations        = stations;
 	geometry.pitch           = pitch;
 
+	//---------------------------------------------------------------------
+	// The drum: the same N cards round the inside of a drum of radius 1,
+	// seen from kEye radii off its axis, through N slits in its near wall.
+	// A card is Card Size of a station's arc wide, with its print and
+	// margin in the disc's proportions; the strip of cards on the far wall
+	// fills the slit band's view of it (the band is ( d - 1 ) / ( d + 1 ) of
+	// its height); the slits are kSlit of a station wide, and the camera is
+	// opened by their duty cycle. Radius sets how wide the drum looks.
+	//---------------------------------------------------------------------
+	const auto view = static_cast< View >( OptionIndex( params[ PT_VIEW ], static_cast< int >( View::Count ) ) );
+	{
+		const double halfWidth  = RadiusFromParam( params[ PT_RADIUS ] ) * 0.62 * width;
+		drum.focal              = halfWidth * std::sqrt( kEye * kEye - 1.0 );
+		drum.eye                = kEye;
+		const double cardArc    = CardSizeFromParam( params[ PT_CARD_SIZE ] ) * pitch;
+		const double printTall  = cardArc / ( aspect + 2.0 * kMargin );
+		drum.cardHalfWidth      = 0.5 * cardArc;
+		drum.cardHalfHeight     = 0.5 * printTall * ( 1.0 + 2.0 * kMargin );
+		drum.printHalfWidth     = 0.5 * printTall * aspect;
+		drum.printHalfHeight    = 0.5 * printTall;
+		drum.stripHalf          = 1.15 * drum.cardHalfHeight;
+		drum.bandHalf           = drum.stripHalf * ( kEye - 1.0 ) / ( kEye + 1.0 );
+		drum.drumHalf           = 2.0 * drum.bandHalf;
+		drum.slitHalf           = 0.5 * kSlit * pitch;
+		drum.gain               = 1.0 / kSlit;
+	}
+	//The print's width on screen, at the far wall's middle: what the cards'
+	//layers are sized from.
+	const double layerPrint = view == View::Drum ? 2.0 * drum.printHalfWidth * drum.focal / ( kEye + 1.0 ) : printWidth;
+
 	const bool resized = lastWidth > 0 && ( width != lastWidth || height != lastHeight );
 	lastWidth          = width;
 	lastHeight         = height;
 
-	if( !ensureBuffers( width, height, stations, printWidth, aspect ) )
+	if( !ensureBuffers( width, height, stations, layerPrint, aspect ) )
 	{
 		diag::error( "could not allocate the cards or the afterimage" );
 		return FF_FAIL;
@@ -437,6 +467,17 @@ FFResult ZoetropePlugin::ProcessOpenGL( ProcessOpenGLStruct* pgl )
 		rows[ rowCount * 4 + 2 ] = static_cast< float >( segment.weight );
 		++rowCount;
 	}
+	//The drum is under steady light: the lamp at the strobe's level and the
+	//room light, over the whole exposure. The slits are its shutter.
+	if( view == View::Drum && shutter > 0.0 )
+	{
+		const double steady = ( StrobeFromParam( params[ PT_STROBE ] ) + RoomLightFromParam( params[ PT_ROOM_LIGHT ] ) ) * shutter / period;
+		segments.assign( 1, LightSegment { -shutter, 0.0, steady, false } );
+		rows[ 0 ] = 0.0f;
+		rows[ 1 ] = 1.0f;
+		rows[ 2 ] = static_cast< float >( steady );
+		rowCount  = 1;
+	}
 
 	//---------------------------------------------------------------------
 	// 3. The scene, to the host -- or with Persistence on, into the
@@ -481,6 +522,16 @@ FFResult ZoetropePlugin::ProcessOpenGL( ProcessOpenGLStruct* pgl )
 		sceneShader.Set( "OutputMode", outputMode );
 		sceneShader.Set( "Afterimage", keep );
 		sceneShader.Set( "Hooks", hooks );
+		sceneShader.Set( "ViewMode", static_cast< int >( view ) );
+		sceneShader.Set( "Eye", static_cast< float >( drum.eye ) );
+		sceneShader.Set( "Focal", static_cast< float >( drum.focal ) );
+		sceneShader.Set( "BandHalf", static_cast< float >( drum.bandHalf ) );
+		sceneShader.Set( "StripHalf", static_cast< float >( drum.stripHalf ) );
+		sceneShader.Set( "DrumHalf", static_cast< float >( drum.drumHalf ) );
+		sceneShader.Set( "SlitHalf", static_cast< float >( drum.slitHalf ) );
+		sceneShader.Set( "Gain", static_cast< float >( drum.gain ) );
+		sceneShader.Set( "DrumCard", static_cast< float >( drum.cardHalfWidth ), static_cast< float >( drum.cardHalfHeight ) );
+		sceneShader.Set( "DrumPrint", static_cast< float >( drum.printHalfWidth ), static_cast< float >( drum.printHalfHeight ) );
 		quad.Draw();
 		glActiveTexture( GL_TEXTURE1 );
 		glBindTexture( GL_TEXTURE_2D_ARRAY, 0 );

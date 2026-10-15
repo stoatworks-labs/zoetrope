@@ -20,6 +20,24 @@ namespace zoetrope
 /// The card's margin round its print, as a fraction of the print's height.
 constexpr double kMargin = 0.06;
 
+/// The drum's eye: its distance from the drum's axis, in drum radii.
+constexpr double kEye = 3.0;
+/// A slit's width, as a fraction of a station.
+constexpr double kSlit = 1.0 / 16.0;
+
+/// The drum as of the last frame: lengths in drum radii (an arc is its
+/// angle), the focal length in pixels per unit of a ray's slope.
+struct DrumGeometry
+{
+	double eye = kEye;
+	double focal = 1.0;
+	double cardHalfWidth = 0.0, cardHalfHeight = 0.0;
+	double printHalfWidth = 0.0, printHalfHeight = 0.0;
+	double stripHalf = 0.0, bandHalf = 0.0, drumHalf = 0.0;
+	double slitHalf = 0.0;
+	double gain = 1.0;
+};
+
 /// Where the disc sits on the output raster, in pixels, as of the last frame.
 struct Geometry
 {
@@ -127,6 +145,10 @@ public:
 	{
 		return geometry;
 	}
+	const DrumGeometry& LastDrum() const
+	{
+		return drum;
+	}
 	/// The light segments the last frame was exposed to.
 	const std::vector< LightSegment >& LastSegments() const
 	{
@@ -175,6 +197,7 @@ private:
 	Strobe strobe;
 	audio::Analyser analyser;
 	Geometry geometry;
+	DrumGeometry drum;
 	std::vector< LightSegment > segments;
 	std::vector< Disc::Print > prints;
 	std::vector< double > pushes;

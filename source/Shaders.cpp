@@ -187,7 +187,7 @@ uniform int Hooks;
 //linear light: the disc, the card stock round a print (and all of a card
 //not yet printed), and the print head.
 const float kDisc       = 0.006;
-const float kStock      = 0.62;
+const float kStock      = 0.5;
 const float kHeadAlbedo = 0.32;
 
 in vec2 uv;
@@ -226,7 +226,144 @@ vec3 cardAt( float r, float a, float turned )
 	float inside = clamp( PrintHalf.x - abs( t ) + 0.5, 0.0, 1.0 ) * clamp( PrintHalf.y - abs( q ) + 0.5, 0.0, 1.0 ) * print_.a;
 	return cover * ( mix( vec3( kStock ), print_.rgb, inside ) - vec3( kDisc ) );
 }
+)";
 
+//---------------------------------------------------------------------------
+// 3b. the drum: the same cards on the inside of a drum, seen through slits
+// in its near wall. The slits are the shutter; the light is steady.
+//---------------------------------------------------------------------------
+const char* const kDrumFragment = R"(
+uniform int ViewMode;     //0: the disc. 1: the drum
+uniform float Eye;        //the eye's distance from the drum's axis, in drum radii
+uniform float Focal;      //pixels per unit of a ray's slope
+uniform float BandHalf;   //the slit band's half-height on the near wall, drum radii
+uniform float StripHalf;  //the strip of cards' half-height on the far wall
+uniform float DrumHalf;   //the drum's own half-height
+uniform float SlitHalf;   //half a slit, radians of the drum's turn
+uniform float Gain;       //the camera opened by the slits' duty cycle: pitch / slit
+uniform vec2 DrumCard;    //half a card: across ( radians of arc, so drum radii ), up
+uniform vec2 DrumPrint;   //half its print
+
+//The drum's black card, inside and out.
+const float kWall = 0.0008;
+
+//The fraction of the exposure at which the drum has turned `turned` past
+//the reference: angleAt's inverse, on the same table.
+float fractionAt( float turned )
+{
+	if( turned <= Angles[ 0 ] )
+		return 0.0;
+	for( int i = 0; i < 16; ++i )
+		if( turned <= Angles[ i + 1 ] )
+		{
+			float span = Angles[ i + 1 ] - Angles[ i ];
+			return ( float( i ) + ( span > 0.0 ? ( turned - Angles[ i ] ) / span : 0.0 ) ) / 16.0;
+		}
+	return 1.0;
+}
+
+//What the far wall's inner face gives back at room angle g, height y, with
+//the drum turned `turned` past the reference. `scale` is pixels per drum
+//radius there, for the edges' coverage.
+vec3 wallAt( float g, float y, float turned, float scale )
+{
+	float x     = ( g - turned ) / Pitch - PhaseFrac;
+	float kf    = floor( x + 0.5 );
+	float t     = ( x - kf ) * Pitch;
+	float cover = clamp( ( DrumCard.x - abs( t ) ) * scale + 0.5, 0.0, 1.0 ) * clamp( ( DrumCard.y - abs( y ) ) * scale + 0.5, 0.0, 1.0 );
+	if( cover <= 0.0 )
+		return vec3( kWall );
+	int card     = ( int( kf ) - StationOffset + 64 * Stations ) % Stations;
+	vec4 print_  = texture( Cards, vec3( 0.5 + 0.5 * t / DrumPrint.x, 0.5 + 0.5 * y / DrumPrint.y, float( card ) ) );
+	float inside = clamp( ( DrumPrint.x - abs( t ) ) * scale + 0.5, 0.0, 1.0 ) * clamp( ( DrumPrint.y - abs( y ) ) * scale + 0.5, 0.0, 1.0 ) * print_.a;
+	return mix( vec3( kWall ), mix( vec3( kStock ), print_.rgb, inside ), cover );
+}
+
+//The drum, for the pixel p pixels from the frame's centre: x the light it
+//sent over the exposure (before the light's level), w its coverage of the
+//pixel. The eye is at ( 0, 0, -Eye ), looking along +z at the drum's axis;
+//room angles are measured from +z towards +x, as the disc's are from twelve
+//o'clock, and the drum turns the same way.
+vec4 drumAt( vec2 p )
+{
+	float X = p.x / Focal, Y = p.y / Focal;
+	float A = X * X + 1.0;
+	float under = Eye * Eye - A * ( Eye * Eye - 1.0 );
+	//The silhouette, the top and the bottom, as coverage in pixels.
+	float sideEdge = Focal / sqrt( Eye * Eye - 1.0 ) - abs( p.x );
+	if( under <= 0.0 || sideEdge < -0.5 )
+		return vec4( 0.0 );
+	float root  = sqrt( max( under, 0.0 ) );
+	float tNear = ( Eye - root ) / A;
+	float tFar  = ( Eye + root ) / A;
+	float yNear = Y * tNear;
+	float cover = clamp( sideEdge + 0.5, 0.0, 1.0 ) * clamp( ( DrumHalf - abs( yNear ) ) * Focal / tNear + 0.5, 0.0, 1.0 );
+	if( cover <= 0.0 )
+		return vec4( 0.0 );
+
+	//Through the band, the slits; elsewhere the wall.
+	float band = clamp( ( BandHalf - abs( yNear ) ) * Focal / tNear + 0.5, 0.0, 1.0 );
+	vec3 seen  = vec3( kWall );
+	if( band > 0.0 )
+	{
+		float gNear = clockAngle( vec2( X * tNear, tNear - Eye ) );
+		float gFar  = clockAngle( vec2( X * tFar, tFar - Eye ) );
+		float yFar  = Y * tFar;
+		float scale = Focal / tFar;
+		//Where the near wall under this pixel is, in slits: slit k sits at
+		//drum angle k pitch + pi, so a whole number is a slit's middle.
+		float turned0 = angleAt( 0.0 ), turned1 = angleAt( 1.0 );
+		float s0      = ( gNear - kPi - turned0 ) / Pitch - PhaseFrac;
+		float s1      = ( gNear - kPi - turned1 ) / Pitch - PhaseFrac;
+		float h       = SlitHalf / Pitch;
+		float open    = 0.0;
+		vec3 through  = vec3( 0.0 );
+		if( s0 - s1 < 1e-6 )
+		{
+			//Standing still: a slit is over this pixel for the whole
+			//exposure, or none is.
+			if( abs( s0 - floor( s0 + 0.5 ) ) <= h )
+			{
+				open    = 1.0;
+				through = wallAt( gFar, yFar, turned0, scale );
+			}
+		}
+		else
+		{
+			//Each slit that passes: the part of the exposure it is open for,
+			//solved from the table, and the far wall over the turn it is
+			//open for, by sixteen taps.
+			float first = ceil( s1 - h ), last = floor( s0 + h );
+			for( float k = first; k <= last && k < first + 64.0; k += 1.0 )
+			{
+				float lo = max( k - h, s1 ), hi = min( k + h, s0 );
+				if( hi <= lo )
+					continue;
+				float turnedLo = gNear - kPi - ( hi + PhaseFrac ) * Pitch;
+				float turnedHi = gNear - kPi - ( lo + PhaseFrac ) * Pitch;
+				float share    = fractionAt( turnedHi ) - fractionAt( turnedLo );
+				vec3 far       = vec3( 0.0 );
+				for( int j = 0; j < 16; ++j )
+				{
+					float turned = mix( turnedLo, turnedHi, ( float( j ) + 0.5 ) / 16.0 );
+					if( ( Hooks & 2 ) != 0 )
+						turned = angleAt( 0.5 );
+					far += wallAt( gFar, yFar, turned, scale );
+				}
+				through += share * far / 16.0;
+				open += share;
+			}
+		}
+		seen = mix( vec3( kWall ), through + ( 1.0 - open ) * vec3( kWall ), band );
+	}
+	return vec4( Gain * seen, cover );
+}
+)";
+
+//---------------------------------------------------------------------------
+// 3c. the scene's main: the disc or the drum, then the output.
+//---------------------------------------------------------------------------
+const char* const kSceneMain = R"(
 void main()
 {
 	ivec2 pixel   = ivec2( gl_FragCoord.xy ) - ViewOrigin;
@@ -239,6 +376,23 @@ void main()
 	float light = 0.0;
 	for( int s = 0; s < SegmentCount; ++s )
 		light += Segments[ s ].z;
+
+	vec3 behind   = BackgroundMode == 1 ? toLinear( original.rgb ) : vec3( 0.0 );
+	float behindA = BackgroundMode == 1 ? original.a : 1.0;
+	if( ViewMode == 1 )
+	{
+		vec4 drum    = drumAt( p );
+		vec3 scene   = mix( behind, light * drum.rgb, drum.a );
+		float sceneA = mix( behindA, 1.0, drum.a );
+		if( OutputMode == 1 )
+		{
+			vec4 before = texelFetch( Previous, pixel, 0 );
+			fragColor   = vec4( mix( scene, before.rgb, Afterimage ), mix( sceneA, before.a, Afterimage ) );
+			return;
+		}
+		fragColor = mix( original, vec4( toCode( scene ), sceneA ), MixAmount );
+		return;
+	}
 
 	vec3 lit = vec3( kDisc * light );
 	if( r > BandInner && r < BandOuter )
@@ -263,8 +417,6 @@ void main()
 	}
 
 	float discCover = clamp( DiscRadius - r + 0.5, 0.0, 1.0 );
-	vec3 behind     = BackgroundMode == 1 ? toLinear( original.rgb ) : vec3( 0.0 );
-	float behindA   = BackgroundMode == 1 ? original.a : 1.0;
 	vec3 scene      = mix( behind, lit, discCover );
 	float sceneA    = mix( behindA, 1.0, discCover );
 
@@ -322,7 +474,11 @@ std::string Assemble( Pass pass )
 	{
 	case Pass::Print: out += kPrintFragment; break;
 	case Pass::Carry: out += kCarryFragment; break;
-	case Pass::Scene: out += kSceneFragment; break;
+	case Pass::Scene:
+		out += kSceneFragment;
+		out += kDrumFragment;
+		out += kSceneMain;
+		break;
 	case Pass::Show: out += kShowFragment; break;
 	}
 	return out;

@@ -1267,3 +1267,141 @@ int runResize( const Perturb& perturb )
 	            small.h, same, seen.c_str() ) );
 	return Verdict();
 }
+
+//===========================================================================
+// --drum: the figures inside a turning drum, seen through its slits, are
+// squeezed sideways by ( d + a ) / ( 2 d ) at the middle of the view.
+//===========================================================================
+
+/// The drum's map from a screen column to room angles, in double, from the
+/// harness's own ray-cylinder geometry: the eye d radii off the axis, focal
+/// length f pixels. G is the far wall's drum angle seen through a slit at its
+/// middle (less the slit's own), gammaFar the far wall's room angle.
+struct DrumRay
+{
+	double d, f;
+	double near( double x ) const { return hit( x, false ); }
+	double far( double x ) const { return hit( x, true ); }
+	double G( double x ) const { return wrapTo( far( x ), kTwoPi ) - near( x ) + kPi; }
+	double hit( double x, bool farSide ) const
+	{
+		const double X = x / f, A = X * X + 1.0;
+		const double root = std::sqrt( d * d - A * ( d * d - 1.0 ) );
+		const double t    = ( d + ( farSide ? root : -root ) ) / A;
+		return clockwise( X * t, t - d );
+	}
+	/// The column where `map` reaches `target`, by bisection about `guess`.
+	template < typename Map >
+	double solve( Map map, double target, double lo, double hi ) const
+	{
+		for( int i = 0; i < 200; ++i )
+		{
+			const double mid = 0.5 * ( lo + hi );
+			( map( mid ) < target ? lo : hi ) = mid;
+		}
+		return 0.5 * ( lo + hi );
+	}
+};
+
+int runDrum( const Perturb& perturb )
+{
+	std::printf( "\n=== drum: through the moving slits the figures stand where the geometry puts them, squeezed by ( d + a ) / 2d\n" );
+	for( const Raster& raster : kRasters )
+	{
+		Rig rig;
+		if( !startRig( rig, raster, splitClip, perturb ) )
+			return 1;
+		rig.Set( PT_VIEW, static_cast< float >( View::Drum ) );
+		rig.Set( PT_STATIONS, 12.0f );
+		if( !printAll( rig, 12 ) )
+			return 1;
+		//600 RPM at 60 fps with 12 stations: exactly two stations a frame,
+		//so every column sees two whole passes of a slit, whatever its phase.
+		rig.Set( PT_RPM, 1.0f );
+		if( !rig.Render( 3 ) )
+			return 1;
+		const Picture p     = pictureOf( rig );
+		const DrumGeometry& dg = rig.plugin.LastDrum();
+		const Geometry& g   = rig.plugin.LastGeometry();
+		const DrumRay ray { dg.eye, dg.focal };
+		const double pitch  = kTwoPi / 12.0;
+		//Where each figure's black-to-white centre line must be: G( x ) =
+		//m pitch; and where it would be on a drum standing still, seen
+		//directly: gammaFar( x ) = m pitch.
+		double predicted[ 3 ], still[ 3 ];
+		const double span = 0.8 * dg.focal / std::sqrt( dg.eye * dg.eye - 1.0 );
+		for( int m = -1; m <= 1; ++m )
+		{
+			predicted[ m + 1 ] = ray.solve( [ & ]( double x ) { return ray.G( x ); }, m * pitch, -span, span );
+			still[ m + 1 ] = ray.solve( [ & ]( double x ) { return wrapTo( ray.far( x ), kTwoPi ); }, m * pitch, -span, span );
+		}
+		//The rows across the band's middle half.
+		const double bandPx = dg.bandHalf * dg.focal / ( dg.eye - 1.0 );
+		double measured[ 3 ] = { 0.0, 0.0, 0.0 };
+		int rows = 0, missing = 0;
+		for( int j = 0; j < p.h; ++j )
+		{
+			const double y = j + 0.5 - g.centreY;
+			if( std::fabs( y ) > 0.5 * bandPx )
+				continue;
+			++rows;
+			for( int m = 0; m < 3; ++m )
+			{
+				const double x0 = g.centreX + predicted[ m ];
+				//The levels either side, clear of the slit's blur
+				//( pitch / 16 of turn, ~7 px at 1280 ).
+				const double wide = 3.0 + 1.5 * dg.slitHalf * 2.0 / ( 2.0 * dg.eye / dg.focal );
+				const double dark = p.sample( x0 - wide, j + 0.5 ), bright = p.sample( x0 + wide, j + 0.5 );
+				const double half = 0.5 * ( dark + bright );
+				double found = 1e9;
+				for( int i = static_cast< int >( x0 - wide ); i < static_cast< int >( x0 + wide ); ++i )
+				{
+					const double a = p.sample( i + 0.5, j + 0.5 ), b = p.sample( i + 1.5, j + 0.5 );
+					if( a < half && b >= half && bright - dark > 0.3 )
+					{
+						const double at = i + 0.5 + ( half - a ) / ( b - a );
+						if( std::fabs( at - x0 ) < std::fabs( found - x0 ) )
+							found = at;
+					}
+				}
+				if( found > 1e8 )
+					++missing;
+				else
+					measured[ m ] += found - g.centreX;
+			}
+		}
+		for( double& m : measured )
+			m /= std::max( rows, 1 );
+		double worst = 0.0;
+		for( int m = 0; m < 3; ++m )
+			worst = std::max( worst, std::fabs( measured[ m ] - predicted[ m ] ) );
+		//The edge is the average of 16 taps over each slit's pass, smoothed
+		//by the texel's tent: symmetric about the line, so its middle is
+		//the line's place up to the GPU's 8-bit filter weights (1/512 of
+		//the ramp, ~0.02 px) and a straight-line read between two pixels
+		//of a ramp that is not quite straight there.
+		const double tolerance = 0.05;
+		Check( rows > 4 && missing == 0 && worst <= tolerance,
+		       fmt( "%dx%d, 12 stations at 600 RPM, eye %.1f radii out: the figures' centre lines at %.3f, %.3f, %.3f px from the middle, "
+		            "the geometry's %.3f, %.3f, %.3f (worst %.4f px, tolerance %.2f; %d rows)",
+		            raster.w, raster.h, dg.eye, measured[ 0 ], measured[ 1 ], measured[ 2 ], predicted[ 0 ], predicted[ 1 ], predicted[ 2 ],
+		            worst, tolerance, rows ) );
+		//The squeeze: figures' spacing against the still drum's. In the
+		//closed form it is the slopes' ratio at the middle of the view,
+		//d gammaFar / dx over d G / dx = ( d + a ) / ( d + a + d - a ); the
+		//harness's own geometry gives that slope (a central difference over
+		//a hundredth of a pixel) and the ratio across a station either
+		//side, which the picture is held to.
+		const double closed  = ( dg.eye + 1.0 ) / ( 2.0 * dg.eye );
+		const double h       = 0.01;
+		const double slope   = ( wrapTo( ray.far( h ), kTwoPi ) - wrapTo( ray.far( -h ), kTwoPi ) ) / ( ray.G( h ) - ray.G( -h ) );
+		const double exact   = ( predicted[ 2 ] - predicted[ 0 ] ) / ( still[ 2 ] - still[ 0 ] );
+		const double squeeze = ( measured[ 2 ] - measured[ 0 ] ) / ( still[ 2 ] - still[ 0 ] );
+		const double slack   = 2.0 * tolerance / ( still[ 2 ] - still[ 0 ] );
+		Check( std::fabs( squeeze - exact ) <= slack && std::fabs( slope - closed ) < 1e-6,
+		       fmt( "%dx%d: the figures squeezed to %.5f of the still drum's width across a station either side, the geometry's %.5f "
+		            "(tolerance %.5f, two edges' error); at the middle the geometry's slope is %.7f and ( d + a ) / 2d = %.7f",
+		            raster.w, raster.h, squeeze, exact, slack, slope, closed ) );
+	}
+	return Verdict();
+}

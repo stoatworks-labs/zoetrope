@@ -37,6 +37,8 @@ extern const char* const kCommon;
 extern const char* const kPrintFragment;
 extern const char* const kCarryFragment;
 extern const char* const kSceneFragment;
+extern const char* const kDrumFragment;
+extern const char* const kSceneMain;
 extern const char* const kShowFragment;
 
 enum class Pass
@@ -61,7 +63,8 @@ constexpr int kMaxTaps = 64;
 /// sets 0, and every branch they guard is then the shipped model.
 enum Hook : int
 {
-	kHookTapWeights = 1 << 0///< a segment's taps averaged over n + 1, not n
+	kHookTapWeights = 1 << 0,///< a segment's taps averaged over n + 1, not n
+	kHookDrumStill  = 1 << 1 ///< the drum's far wall seen at the exposure's middle, not when each slit passed
 };
 
 } // namespace zoetrope::shaders

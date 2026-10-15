@@ -27,6 +27,7 @@ MUTANTS=(
 	"source/Shaders.cpp|float x     = ( a - turned ) / Pitch - PhaseFrac;|float x     = ( a + turned ) / Pitch - PhaseFrac;|--smear|GLSL: the disc turning backwards within the exposure, - -> +"
 	"source/Shaders.cpp|int card     = ( int( kf ) - StationOffset + 64 * Stations ) % Stations;|int card     = ( int( kf ) + StationOffset + 64 * Stations ) % Stations;|--delay|GLSL: the cards dealt to the wrong stations, - -> +"
 	"source/Shaders.cpp|fragColor = vec4( sum / float( Taps * Taps ), 1.0 );|fragColor = vec4( sum / float( Taps + Taps ), 1.0 );|--energy|GLSL: a print's average over the wrong count, * -> +"
+	"source/Shaders.cpp|float tFar  = ( Eye + root ) / A;|float tFar  = ( Eye - root ) / A;|--drum|GLSL: the drum's far wall where the near wall is, + -> -"
 	"source/Disc.cpp|const double decay  = -std::expm1( -k * s ) / k;|const double decay  = -std::expm1( +k * s ) / k;|--bearing|C++: the viscous decay growing, - -> +"
 	"source/Disc.cpp|const int card    = static_cast< int >( ( ( -m ) % n + n ) % n );|const int card    = static_cast< int >( ( ( +m ) % n + n ) % n );|--delay|C++: the head printing the wrong card, - -> +"
 	"source/Strobe.cpp|double weight = strobe * ( b - a ) / f.length;|double weight = strobe * ( b - b ) / f.length;|--energy|C++: a flash's overlap measured as nothing, a -> b"

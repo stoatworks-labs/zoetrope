@@ -43,6 +43,7 @@ constexpr double kPersistenceMost = 0.2;
 const char* const kTriggerNames[]    = { "Beat", "Half Beat", "Quarter Beat", "Eighth Beat", "Bar", "Onset", "Rate", "Fire Only" };
 const char* const kDriveNames[]      = { "Motor", "Hand" };
 const char* const kBackgroundNames[] = { "Black", "Clip" };
+const char* const kViewNames[]       = { "Disc", "Drum" };
 
 ControlInfo standard( unsigned int id, const char* name, const char* group, float value )
 {
@@ -94,7 +95,7 @@ const ControlInfo kTable[] = {
 	standard( PT_PUSH, "Push", "Disc", ParamFromPush( 30.0 * kRpm ) ),
 	standard( PT_FRICTION, "Friction", "Disc", ParamFromViscous( 0.4 ) ),
 	standard( PT_PRINT_AT, "Print At", "Disc", 0.0f ),
-	standard( PT_RADIUS, "Radius", "Disc", ParamFromRadius( 0.62 ) ),
+	standard( PT_RADIUS, "Radius", "Disc", ParamFromRadius( 0.72 ) ),
 	standard( PT_CARD_SIZE, "Card Size", "Disc", ParamFromCardSize( 0.9 ) ),
 
 	standard( PT_SHUTTER, "Shutter", "Camera", 1.0f ),
@@ -102,6 +103,8 @@ const ControlInfo kTable[] = {
 	standard( PT_PERSISTENCE, "Persistence", "Camera", 0.0f ),
 	option( PT_BACKGROUND, "Background", "Camera", 0.0f, kBackgroundNames, static_cast< int >( Background::Count ) ),
 	standard( PT_MIX, "Mix", "Camera", 1.0f ),
+
+	option( PT_VIEW, "View", "View", 0.0f, kViewNames, static_cast< int >( View::Count ) ),
 };
 static_assert( sizeof( kTable ) / sizeof( kTable[ 0 ] ) == PT_ABOUT_FIRST, "every control needs a row in the table" );
 } // namespace

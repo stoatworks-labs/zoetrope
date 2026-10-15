@@ -158,7 +158,7 @@ step "Checks (this Mac's GPU, 1280x720 and 320x180)"
 # picture check runs at 1280x720 and 320x180 unless it says otherwise (audio
 # and resize use the smaller and twice it). bearing, beat, cues and names
 # need no GL.
-CHECKS="drift lock smear energy delay hand alias audio resize state"
+CHECKS="drift lock smear energy delay hand alias audio resize drum state"
 for check in $CHECKS bearing beat cues names; do
 	if out=$( "$ZTTEST" --$check 2>&1 ); then
 		printf '   ok   zttest --%s: %s checks\n' "$check" "$( printf '%s\n' "$out" | grep -c '^  ok' )"
