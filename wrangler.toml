@@ -9,8 +9,8 @@
 # plugin's own C++ compiled to WebAssembly by `demo/tools/build-wasm.sh`, which
 # is committed (demo/zoetrope-core.{js,wasm}); the shared kit is vendored into
 # `demo/vendor/` by `stoatworks-backend/resolume-demo/sync.sh`. So what is
-# committed is what is served. There is no deploy workflow yet (the repository
-# is not public, and a private repo gets no Actions); by hand:
+# committed is what is served. `.github/workflows/deploy.yml` deploys every push
+# to main and checks the live <head>; by hand it is:
 #
 #   cf-run npx wrangler deploy
 #
@@ -41,9 +41,9 @@ directory = "./demo"
 # succeeds -- so wrangler reports a Worker that nothing serves. A route has no
 # such limit, but it needs a proxied DNS record to exist first, which wrangler
 # does not create: `zoetrope-demo` wants an AAAA 100:: record, proxied, made
-# through the API before the first deploy (slowscan's recipe). As of 2026-10-15
-# that record has NOT been made. Without it, or if it is ever deleted, this page
-# is dark however green the deploy looks.
+# through the API before the first deploy (slowscan's recipe). It was made on
+# 2026-10-15. Without it, or if it is ever deleted, this page is dark however
+# green the deploy looks.
 [[routes]]
 pattern = "zoetrope-demo.stoatworks-labs.com/*"
 zone_name = "stoatworks-labs.com"
