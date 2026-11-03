@@ -18,6 +18,8 @@ The clip's frames printed on the cards of a spinning disc, seen only in the ligh
 strobe that fires on the music. An FFGL effect for [Resolume](https://resolume.com) Arena
 and Avenue.
 
+The [project page](https://stoatworks-labs.com/software/zoetrope/) has the downloads, the [user guide](https://stoatworks-labs.com/software/zoetrope/guide/) and the video.
+
 ![A black disc with twelve cards round its rim, each a frame of a blue and orange kaleidoscope clip at a different moment: the cards are sharp, with a faint smear and a dimmer blurred ghost trailing each one, and a small grey print head stands just above the disc at twelve o'clock](docs/hero.png)
 
 <sub>One frame, rendered by `zttest`, the offline harness, not captured from Resolume.
